@@ -98,7 +98,7 @@ else:
     from types import SimpleNamespace
     text_type = str
 
-
+title_list_file=open("all_titles.txt","w")
 # ===========================================================================
 
 # Program version
@@ -598,6 +598,14 @@ class Extractor(object):
         """
         :param out: a memory file.
         """
+        title_list_file.write(self.title+"\n")
+        if options.title_filter:
+            for title_pattern in options.title_filter:
+                if re.match(title_pattern, self.title):
+                    break
+            else:
+                 return   
+
         logging.info('%s\t%s', self.id, self.title)
 
         # Separate header from text with a newline.
@@ -3156,6 +3164,8 @@ def main():
     default_process_count = max(1, cpu_count() - 1)
     parser.add_argument("--processes", type=int, default=default_process_count,
                         help="Number of processes to use (default %(default)s)")
+    parser.add_argument("--title_filter", default="", type=str,
+                        help="filter article name by regex")
 
     groupS = parser.add_argument_group('Special')
     groupS.add_argument("-q", "--quiet", action="store_true",
@@ -3174,6 +3184,13 @@ def main():
                              " one category. starting with: 1) '#' comment, ignored; 2) '^' exclude; Note: excluding has higher priority than including")
     args = parser.parse_args()
 
+    if args.title_filter:
+        with open(args.title_filter,encoding="utf-8") as f:
+            options.title_filter=set([name.rstrip() for name in f.readlines()])
+        print("title filter list:",options.title_filter)
+    else:
+        options.title_filter=set()
+    
     options.keepLinks = args.links
     options.keepSections = args.sections
     options.keepLists = args.lists
